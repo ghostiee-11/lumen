@@ -22,6 +22,7 @@ from ...data.sql import (  # noqa: F401
 from ...filters import ConstantFilter
 from ...pipeline import Pipeline
 from ...sources.base import BaseSQLSource, QueryTimeoutError, Source
+from ...sources.data import mesh_of
 from ...sources.duckdb import DuckDBSource
 from ...sources.xarray_sql import XArraySQLSource, grid_facts
 from ...transforms.sql import SQLLimit
@@ -1417,6 +1418,7 @@ class SQLAgent(BaseLumenAgent):
                         h3=loads_h3(sources),
                         geocode=sharing.geocode and self.llm._supports_tools,
                         geocoded_places=geocoded,
+                        mesh=any(mesh_of(source) for source in sources.values()),
                         step_number=1,
                         is_final_step=True,
                         current_step="",

@@ -337,6 +337,8 @@ A grid and polygons read into one source join in one query: `lumen.read({"air": 
 
 **Hex bins.** `lumen.read({"quakes": df}, extensions=["h3"])` loads DuckDB's community [H3 extension](https://duckdb.org/community_extensions/extensions/h3) (downloaded once, then cached), so "Count the earthquakes per H3 cell at resolution 4 and map them" bins longitude and latitude into hexagons and maps them on a basemap. Any DuckDB extension loads the same way, or on a source with `source.load_extension("h3")`.
 
+**Unstructured meshes.** Ocean and climate model output on a UGRID mesh reads with `lumen.read(mesh)`, from an xugrid `UgridDataset` or an xarray Dataset with a mesh topology variable (`pip install "lumen[mesh]"`). Each face, node or edge variable becomes a table with one row per location (and time step), and `<mesh>_faces`, `<mesh>_nodes` and `<mesh>_edges` tables hold their centres, so questions can filter by location. An answer that keeps the index comes back on the mesh: `answer.ds` is a `UgridDataset`, and `answer.map()` draws face and node values on the mesh's triangles with hvPlot's xugrid backend and edge values as points at the edge centres.
+
 An answer over a table with a geometry column, or over an xarray Dataset, has a few more fields:
 
 | Field | What it is |

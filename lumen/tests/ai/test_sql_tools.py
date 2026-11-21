@@ -640,3 +640,6 @@ async def test_an_llm_without_tools_gets_the_places_looked_up_first(sql_context,
     assert bool(looked_up) is not supports_tools
     assert ("lon 77.209000" in prompt) is not supports_tools
     assert ("geocode** tool" in prompt) is supports_tools
+async def test_sql_prompt_explains_a_mesh_only_for_mesh_data(sql_context, test_messages, llm):
+    assert "## Unstructured mesh" not in await _main_prompt(sql_context, test_messages, llm)
+    assert "## Unstructured mesh" in await _main_prompt(sql_context, test_messages, llm, mesh=True)
