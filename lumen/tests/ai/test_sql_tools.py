@@ -607,3 +607,36 @@ def test_loads_h3_reads_the_source_initializers():
     # Set afterwards, so the test does not download the extension
     with_h3.initializers = ["INSTALL h3 FROM community;", "LOAD h3;"]
     assert loads_h3({(with_h3.name, "t"): with_h3})
+async def test_sql_prompt_asks_for_the_geocode_tool_only_when_on(sql_context, test_messages, llm):
+    assert "## Place names" not in await _main_prompt(sql_context, test_messages, llm)
+    assert "## Place names" in await _main_prompt(sql_context, test_messages, llm, geocode=True)
+
+
+async def test_sql_prompt_gives_places_looked_up_up_front(sql_context, test_messages, llm):
+    prompt = await _main_prompt(sql_context, test_messages, llm, geocoded_places="Delhi, India: lon 77.209000, lat 28.613900")
+    assert "looked up for you" in prompt and "lon 77.209000" in prompt and "geocode** tool" not in prompt
+
+
+@pytest.mark.parametrize("supports_tools", [True, False])
+async def test_an_llm_without_tools_gets_the_places_looked_up_first(sql_context, test_messages, monkeypatch, supports_tools):
+    from lumen.ai.sharing import sharing
+    llm = OpenAI(model_kwargs={"default": {"model": "gpt-test"}})
+    llm._supports_tools = supports_tools
+    requests, looked_up = [], []
+
+    async def run_client(model_spec, messages, **kwargs):
+        requests.append(messages)
+        return _submit('SELECT "id", "score" FROM people')
+
+    async def geocode_places(llm, messages):
+        looked_up.append(messages)
+        return "Delhi, India: lon 77.209000, lat 28.613900"
+
+    monkeypatch.setattr(llm, "run_client", run_client)
+    monkeypatch.setattr("lumen.ai.agents.sql.geocode_places", geocode_places)
+    monkeypatch.setattr(sharing, "geocode", True)
+    await SQLAgent(llm=llm, clean_data=False).respond(test_messages, await sql_context())
+    prompt = str(requests[0])
+    assert bool(looked_up) is not supports_tools
+    assert ("lon 77.209000" in prompt) is not supports_tools
+    assert ("geocode** tool" in prompt) is supports_tools

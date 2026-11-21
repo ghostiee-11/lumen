@@ -98,6 +98,17 @@ Each row is one grid cell, with the dimensions (e.g. `time`, `lat`, `lon`) as co
 ## H3 hexagons
 The H3 extension is loaded. Bin points into hexagons with `h3_latlng_to_cell(lat, lon, resolution)`, latitude first, grouping by the cell; resolution 3 gives cells about 100 km across, 5 about 20 km, 7 about 3 km, 9 about 400 m. For a map, add the hexagon as `ST_GeomFromText(h3_cell_to_boundary_wkt(cell))::GEOMETRY('EPSG:4326') AS geometry` so it draws on a basemap; `h3_cell_to_lat(cell)` and `h3_cell_to_lng(cell)` give its centre. Neighbours of a cell: `h3_grid_disk(cell, k)`.
 {%- endif %}
+{%- if geocode is defined and geocode %}
+
+## Place names
+Call the **geocode** tool for the coordinates or bounding box of any named place (a city, region or landmark) the question mentions, and use what it returns; do not write coordinates from memory.
+{%- endif %}
+{%- if geocoded_places is defined and geocoded_places %}
+
+## Place names
+The places the question names, looked up for you; use these coordinates, not ones from memory:
+{{ geocoded_places }}
+{%- endif %}
 {%- endblock -%}
 
 {%- block context -%}
