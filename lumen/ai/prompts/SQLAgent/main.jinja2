@@ -93,6 +93,11 @@ Each row is one grid cell, with the dimensions (e.g. `time`, `lat`, `lon`) as co
 - Before any spatial predicate between grid cells and geometry, bring a 0 to 360 grid longitude into -180 to 180: `CASE WHEN lon > 180 THEN lon - 360 ELSE lon END`. Without it a lon/lat polygon matches no cell and the query returns no rows.
 - Per-region means: average each cell over time first, then weight by the area of the cell inside the region times `COS(RADIANS(lat))`: `ST_Area(ST_Intersection(ST_MakeEnvelope(lon - h, lat - h, lon + h, lat + h), ST_MakeValid(geom))) * COS(RADIANS(lat))`, h being half the distance between neighbouring grid points (1.25 on a 2.5 degree grid, 0.125 on a 0.25 degree grid), joined on `ST_Intersects` with the same envelope. Testing cell centres with `ST_Within` misses regions smaller than a cell. `ST_MakeValid` stops a self-intersecting polygon from failing the intersection.
 {%- endif %}
+{%- if h3 is defined and h3 %}
+
+## H3 hexagons
+The H3 extension is loaded. Bin points into hexagons with `h3_latlng_to_cell(lat, lon, resolution)`, latitude first, grouping by the cell; resolution 3 gives cells about 100 km across, 5 about 20 km, 7 about 3 km, 9 about 400 m. For a map, add the hexagon as `ST_GeomFromText(h3_cell_to_boundary_wkt(cell))::GEOMETRY('EPSG:4326') AS geometry` so it draws on a basemap; `h3_cell_to_lat(cell)` and `h3_cell_to_lng(cell)` give its centre. Neighbours of a cell: `h3_grid_disk(cell, k)`.
+{%- endif %}
 {%- endblock -%}
 
 {%- block context -%}

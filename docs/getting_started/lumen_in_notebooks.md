@@ -335,6 +335,8 @@ mean_air = air.ask("Map the mean air temperature in degrees Celsius", llm=Kilo()
 
 A grid and polygons read into one source join in one query: `lumen.read({"air": grid, "states": states_gdf})`, then "What is the area-weighted mean air temperature in each US state?" averages each cell by the share of it inside each state and by latitude, after moving a 0 to 360 grid onto -180 to 180 longitudes. The [zonal statistics notebook](https://github.com/holoviz/lumen/blob/main/examples/notebooks/zonal_statistics.ipynb) walks through it with sample data and with ERA5.
 
+**Hex bins.** `lumen.read({"quakes": df}, extensions=["h3"])` loads DuckDB's community [H3 extension](https://duckdb.org/community_extensions/extensions/h3) (downloaded once, then cached), so "Count the earthquakes per H3 cell at resolution 4 and map them" bins longitude and latitude into hexagons and maps them on a basemap. Any DuckDB extension loads the same way, or on a source with `source.load_extension("h3")`.
+
 An answer over a table with a geometry column, or over an xarray Dataset, has a few more fields:
 
 | Field | What it is |

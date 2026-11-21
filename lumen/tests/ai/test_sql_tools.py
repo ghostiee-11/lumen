@@ -593,3 +593,17 @@ def test_has_geometry_counts_only_the_tables_of_the_sources():
 async def test_sql_prompt_adds_grid_by_polygon_rules_only_for_both(sql_context, test_messages, llm, flags, shown):
     prompt = await _main_prompt(sql_context, test_messages, llm, **flags)
     assert ("## Grid by polygon" in prompt, "lon - 360" in prompt) == (shown, shown)
+async def test_sql_prompt_adds_h3_rules_only_when_loaded(sql_context, test_messages, llm):
+    assert "## H3 hexagons" not in await _main_prompt(sql_context, test_messages, llm)
+    prompt = await _main_prompt(sql_context, test_messages, llm, h3=True)
+    assert "## H3 hexagons" in prompt and "h3_cell_to_boundary_wkt" in prompt
+
+
+def test_loads_h3_reads_the_source_initializers():
+    from lumen.ai.agents.sql import loads_h3
+    plain = DuckDBSource(uri=":memory:")
+    assert not loads_h3({(plain.name, "t"): plain})
+    with_h3 = DuckDBSource(uri=":memory:")
+    # Set afterwards, so the test does not download the extension
+    with_h3.initializers = ["INSTALL h3 FROM community;", "LOAD h3;"]
+    assert loads_h3({(with_h3.name, "t"): with_h3})
